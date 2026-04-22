@@ -1,128 +1,133 @@
-# =========================================
-# LRPD1- SISTEMATIZACION Y METODOS ESTADISTICOS 
-# ANALISIS BASICO DE UNA BASE VETERINARIA
-# =========================================
+## SISTEMATIZACION Y METODOS ESTADISTICOS
+## LRPD1-MEDICINA VETERINARIA Y ZOOTECNIA
 
-# -----------------------------------------
+
 # 1. INSTALAR PAQUETES
-# -----------------------------------------
-install.packages("rio")
-install.packages("janitor")
-install.packages("here")
+# install.packages() sirve para descargar paquetes desde internet y agregarlos a R.
 
-# -----------------------------------------
-# 2. LLAMAR PAQUETES
-# -----------------------------------------
-library(rio)
-library(janitor)
-library(here)
+install.packages("rio") install.packages("janitor")
 
-# -----------------------------------------
+
+# 2. CARGAR PAQUETES
+# library() sirve para activar los paquetes y poder usar sus funciones.
+
+library(rio) library(janitor)
+
+
 # 3. IMPORTAR BASE DE DATOS
-# -----------------------------------------
-lrpd1 <- import("pacientes_caninos.csv")
+# import() permite leer archivos externos: Excel, CSV, TXT, etc. Guardamos la base con el nombre lrpd1
 
-# -----------------------------------------
+lrpd1 \<- import("data/pacientes_caninos.csv")
+
+
 # 4. LIMPIAR NOMBRES DE VARIABLES
-# -----------------------------------------
-lrpd1 <- clean_names(lrpd1)
+# clean_names() ordena los nombres: sin espacios, minúsculas, sin símbolos raros. Esto facilita escribir código después.
 
-# -----------------------------------------
-# 5. MOSTRAR LA BASE
-# -----------------------------------------
+lrpd1 \<- clean_names(lrpd1)
+
+
+# 5. MOSTRAR LA BASE DE DATOS
+# Solo escribir el nombre del objeto permite ver la tabla completa.
+
 lrpd1
 
-# -----------------------------------------
-# 6. EXPLORAR LA BASE
-# -----------------------------------------
-class(lrpd1)
-dim(lrpd1)
-names(lrpd1)
+
+# 6. ESTRUCTURA DE LA BASE
+# str() significa structure. Nos muestra: nombre de variables, tipo de dato, primeros valores
+
 str(lrpd1)
+
+
+# 7. NOMBRES DE COLUMNAS
+# names() muestra únicamente los nombres de las variables de la base.
+
+names(lrpd1)
+
+# 8. DIMENSIONES
+# dim() indica: filas = número de pacientes columnas = número de variables
+
+dim(lrpd1)
+
+
+# 9. RESUMEN GENERAL
+# summary() resume cada variable.
+# Si es numérica:mínimo, máximo, media, mediana.
+# Si es cualitativa: frecuencia por categoría.
+
 summary(lrpd1)
 
-# -----------------------------------------
-# 7. VER COLUMNAS ESPECIFICAS
-# -----------------------------------------
-lrpd1$raza
-lrpd1$sexo
-lrpd1$edad_anios
-lrpd1$peso_kg
-lrpd1$temperatura_c
-lrpd1$diagnostico
 
-# -----------------------------------------
-# 8. REVISAR EL TIPO DE CADA VARIABLE
-# -----------------------------------------
-class(lrpd1$id)
-class(lrpd1$raza)
-class(lrpd1$sexo)
-class(lrpd1$edad_anios)
-class(lrpd1$peso_kg)
-class(lrpd1$temperatura_c)
-class(lrpd1$vacunado)
-class(lrpd1$diagnostico)
-class(lrpd1$hospitalizacion)
+# 10. TIPO DE VARIABLE
+# class() indica qué tipo de dato tiene.
 
-# -----------------------------------------
-# 9. CONVERTIR VARIABLES CUALITATIVAS A FACTOR
-# -----------------------------------------
-lrpd1$raza <- factor(lrpd1$raza)
-lrpd1$sexo <- factor(lrpd1$sexo)
-lrpd1$vacunado <- factor(lrpd1$vacunado)
-lrpd1$diagnostico <- factor(lrpd1$diagnostico)
-lrpd1$hospitalizacion <- factor(lrpd1$hospitalizacion)
+class(lrpd1$edad_anios)     # numérico
+class(lrpd1$sexo) \# texto
 
-# -----------------------------------------
-# 10. VER NIVELES DE LOS FACTORES
-# -----------------------------------------
-levels(lrpd1$raza)
+
+# 11. CONVERTIR A FACTOR
+# factor() se usa para variables categóricas.
+# Ejemplo:
+# sexo = M / H
+# diagnostico = Otitis / Dermatitis
+# ¿Para qué sirve?
+# - R reconoce categorías
+# - facilita tablas de frecuencia
+# - útil para gráficos
+# - importante en análisis estadístico futuro
+
+lrpd1$raza <- factor(lrpd1$raza) lrpd1$sexo <- factor(lrpd1$sexo) lrpd1$vacunado <- factor(lrpd1$vacunado) lrpd1$diagnostico <- factor(lrpd1$diagnostico) lrpd1$hospitalizacion <- factor(lrpd1$hospitalizacion)
+
+
+# 12. VER NIVELES DEL FACTOR
+# levels() muestra las categorías internas que tiene la variable.
+
 levels(lrpd1$sexo)
-levels(lrpd1$vacunado)
 levels(lrpd1$diagnostico)
-levels(lrpd1$hospitalizacion)
 
-# -----------------------------------------
-# 11. LONGITUD DE ALGUNAS VARIABLES
-# -----------------------------------------
-length(lrpd1$edad_anios)
-length(lrpd1$sexo)
-length(lrpd1$diagnostico)
 
-# -----------------------------------------
-# 12. MEDIDAS DESCRIPTIVAS BASICAS
-# -----------------------------------------
+# 13. LONGITUD DE UNA VARIABLE
+# length() indica cuántos datos tiene una columna.
 
-# Edad
+length(lrpd1\$sexo)
+
+
+# 14. MEDIA (PROMEDIO)
+# mean() calcula la media aritmética. Sirve para resumir variables numéricas.
+
 mean(lrpd1$edad_anios)
-sd(lrpd1$edad_anios)
-
-# Peso
 mean(lrpd1$peso_kg)
+
+
+# 15. DESVIACION ESTANDAR
+# sd() mide dispersión.Nos dice cuánto se alejan los datosrespecto al promedio.
+
+sd(lrpd1$edad_anios)
 sd(lrpd1$peso_kg)
 
-# Temperatura
-mean(lrpd1$temperatura_c)
-sd(lrpd1$temperatura_c)
 
-# -----------------------------------------
-# 13. TABLAS DE FRECUENCIA
-# -----------------------------------------
+# 16. TABLAS DE FRECUENCIA
+# table() cuenta cuántas veces aparece cada categoría.
+
 table(lrpd1$sexo)
-table(lrpd1$raza)
-table(lrpd1$vacunado)
 table(lrpd1$diagnostico)
-table(lrpd1$hospitalizacion)
 
-# -----------------------------------------
-# 14. PROPORCIONES
-# -----------------------------------------
-prop.table(table(lrpd1$sexo))
-prop.table(table(lrpd1$diagnostico))
 
-# -----------------------------------------
-# 15. EJEMPLO DE AYUDA EN R
-# -----------------------------------------
-help(mean)
-help(sd)
-help(table)
+# 17. PROPORCIONES
+# prop.table() transforma frecuencias en proporciones.
+
+prop.table(table(lrpd1\$sexo))
+
+# Si deseas porcentaje:
+
+prop.table(table(lrpd1\$sexo)) \* 100
+
+
+# 18. INTERPRETACION FINAL
+# En la parte inferior normalmente veremos:
+# - cantidad de machos y hembras
+# - diagnóstico más frecuente
+# - edad promedio
+# - peso promedio
+# - variabilidad de edades y pesos
+# Esto permite describir la población estudiada.
+# Cualquier problema adional que tengan podremos comentarlo el día lunes
