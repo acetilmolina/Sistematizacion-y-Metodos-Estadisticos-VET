@@ -1,1 +1,128 @@
-codigo LRPD1
+# =========================================
+# LRPD1- SISTEMATIZACION Y METODOS ESTADISTICOS 
+# ANALISIS BASICO DE UNA BASE VETERINARIA
+# =========================================
+
+# -----------------------------------------
+# 1. INSTALAR PAQUETES
+# -----------------------------------------
+install.packages("rio")
+install.packages("janitor")
+install.packages("here")
+
+# -----------------------------------------
+# 2. LLAMAR PAQUETES
+# -----------------------------------------
+library(rio)
+library(janitor)
+library(here)
+
+# -----------------------------------------
+# 3. IMPORTAR BASE DE DATOS
+# -----------------------------------------
+lrpd1 <- import("pacientes_caninos.csv")
+
+# -----------------------------------------
+# 4. LIMPIAR NOMBRES DE VARIABLES
+# -----------------------------------------
+lrpd1 <- clean_names(lrpd1)
+
+# -----------------------------------------
+# 5. MOSTRAR LA BASE
+# -----------------------------------------
+lrpd1
+
+# -----------------------------------------
+# 6. EXPLORAR LA BASE
+# -----------------------------------------
+class(lrpd1)
+dim(lrpd1)
+names(lrpd1)
+str(lrpd1)
+summary(lrpd1)
+
+# -----------------------------------------
+# 7. VER COLUMNAS ESPECIFICAS
+# -----------------------------------------
+lrpd1$raza
+lrpd1$sexo
+lrpd1$edad_anios
+lrpd1$peso_kg
+lrpd1$temperatura_c
+lrpd1$diagnostico
+
+# -----------------------------------------
+# 8. REVISAR EL TIPO DE CADA VARIABLE
+# -----------------------------------------
+class(lrpd1$id)
+class(lrpd1$raza)
+class(lrpd1$sexo)
+class(lrpd1$edad_anios)
+class(lrpd1$peso_kg)
+class(lrpd1$temperatura_c)
+class(lrpd1$vacunado)
+class(lrpd1$diagnostico)
+class(lrpd1$hospitalizacion)
+
+# -----------------------------------------
+# 9. CONVERTIR VARIABLES CUALITATIVAS A FACTOR
+# -----------------------------------------
+lrpd1$raza <- factor(lrpd1$raza)
+lrpd1$sexo <- factor(lrpd1$sexo)
+lrpd1$vacunado <- factor(lrpd1$vacunado)
+lrpd1$diagnostico <- factor(lrpd1$diagnostico)
+lrpd1$hospitalizacion <- factor(lrpd1$hospitalizacion)
+
+# -----------------------------------------
+# 10. VER NIVELES DE LOS FACTORES
+# -----------------------------------------
+levels(lrpd1$raza)
+levels(lrpd1$sexo)
+levels(lrpd1$vacunado)
+levels(lrpd1$diagnostico)
+levels(lrpd1$hospitalizacion)
+
+# -----------------------------------------
+# 11. LONGITUD DE ALGUNAS VARIABLES
+# -----------------------------------------
+length(lrpd1$edad_anios)
+length(lrpd1$sexo)
+length(lrpd1$diagnostico)
+
+# -----------------------------------------
+# 12. MEDIDAS DESCRIPTIVAS BASICAS
+# -----------------------------------------
+
+# Edad
+mean(lrpd1$edad_anios)
+sd(lrpd1$edad_anios)
+
+# Peso
+mean(lrpd1$peso_kg)
+sd(lrpd1$peso_kg)
+
+# Temperatura
+mean(lrpd1$temperatura_c)
+sd(lrpd1$temperatura_c)
+
+# -----------------------------------------
+# 13. TABLAS DE FRECUENCIA
+# -----------------------------------------
+table(lrpd1$sexo)
+table(lrpd1$raza)
+table(lrpd1$vacunado)
+table(lrpd1$diagnostico)
+table(lrpd1$hospitalizacion)
+
+# -----------------------------------------
+# 14. PROPORCIONES
+# -----------------------------------------
+prop.table(table(lrpd1$sexo))
+prop.table(table(lrpd1$diagnostico))
+
+# -----------------------------------------
+# 15. EJEMPLO DE AYUDA EN R
+# -----------------------------------------
+help(mean)
+help(sd)
+help(table)
