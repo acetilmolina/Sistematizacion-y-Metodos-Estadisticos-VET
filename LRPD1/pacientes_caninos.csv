@@ -1,0 +1,21 @@
+ID;Raza;Sexo;Edad_anios;Peso_kg;Temperatura_C;Vacunado;Diagnostico;Hospitalizacion
+1;Mestizo;M;4;18.5;38.7;Si;Dermatitis;No
+2;Labrador;H;7;29.1;39.4;Si;Gastroenteritis;Si
+3;Poodle;H;2;6.3;38.5;No;Otitis;No
+4;Bulldog;M;5;22.4;39.2;Si;Dermatitis;No
+5;Beagle;H;3;14.8;38.9;Si;Gastroenteritis;No
+6;Rottweiler;M;6;34.5;39.5;Si;Otitis;Si
+7;Mestizo;H;1;10.2;38.6;No;Resfrio;No
+8;Shih Tzu;H;4;7.9;39;Si;Dermatitis;No
+9;Labrador;M;8;31.2;39.3;Si;Gastroenteritis;Si
+10;Pug;M;2;8.1;38.8;No;Otitis;No
+11;Mestizo;H;5;16.7;39.1;Si;Dermatitis;No
+12;Golden Retriever;M;6;30.4;39.4;Si;Gastroenteritis;Si
+13;Poodle;H;3;5.8;38.7;Si;Resfrio;No
+14;Beagle;M;4;13.9;39;No;Otitis;No
+15;Mestizo;M;7;21.6;39.2;Si;Dermatitis;No
+16;Bulldog;H;5;23.1;39.5;Si;Gastroenteritis;Si
+17;Labrador;H;2;26.5;38.9;No;Resfrio;No
+18;Rottweiler;M;4;35.2;39.6;Si;Otitis;Si
+19;Mestizo;H;3;15.4;38.8;Si;Dermatitis;No
+20;Shih Tzu;M;6;8.3;39.1;Si;Gastroenteritis;No
