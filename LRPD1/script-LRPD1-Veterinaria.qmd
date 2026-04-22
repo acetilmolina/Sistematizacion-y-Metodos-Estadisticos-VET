@@ -12,7 +12,8 @@ editor: visual
 # 1. INSTALAR PAQUETES
 # install.packages() sirve para descargar paquetes desde internet y agregarlos a R.
 
-install.packages("rio") install.packages("janitor")
+install.packages("rio") 
+install.packages("janitor")
 
 
 # 2. CARGAR PAQUETES
