@@ -1,0 +1,633 @@
+---
+  title: "Informe semana 5"
+author: "Cesar Martin Leyva Molina"
+format: html
+editor: visual
+---
+  
+
+# PRÁCTICA S05: SISTEMATIZACIÓN 
+
+
+# Objetivo de la práctica:
+# Importar una base de datos veterinaria, inspeccionar sus variables,
+# corregir errores frecuentes, crear nuevas variables, obtener estadísticas
+# descriptivas, elaborar gráficos y exportar resultados.
+
+
+# 1. CARGAR PAQUETES
+
+
+# Instalar solo si es la primera vez:
+install.packages("tidyverse")
+install.packages("janitor")
+install.packages("gtsummary")
+install.packages("flextable")
+install.packages("readxl")
+
+library(tidyverse)   # Manejo de datos y gráficos
+library(janitor)     # Limpieza de nombres de variables
+library(gtsummary)   # Tablas resumen tipo tesis
+library(flextable)   # Exportar tablas a Word
+library(readxl)      # Importar archivos Excel
+
+
+
+# 2. IMPORTAR LA BASE DE DATOS
+
+
+# Importando datos
+datos_original <- read_excel("data/s05_practica_sistematizacion.xls")
+
+# Primer vistazo a la base original
+head(datos_original)
+
+# Revisar estructura general
+glimpse(datos_original)
+
+# Número de filas y columnas
+dim(datos_original)
+
+# Nombres originales de las variables
+names(datos_original)
+
+
+
+# 3. LIMPIEZA INICIAL DE LA BASE
+
+
+# clean_names():
+# - Convierte nombres a minúsculas
+# - Reemplaza espacios por guiones bajos
+# - Elimina tildes y caracteres especiales
+#
+# mutate(across(...)):
+# - Convierte celdas vacías "" en NA
+#
+# remove_empty():
+# - Elimina filas o columnas completamente vacías
+
+datos <- datos_original %>%
+  clean_names() %>%
+  mutate(across(where(is.character), ~ na_if(.x, ""))) %>%
+  remove_empty(which = c("rows", "cols"))
+
+# Revisar nombres corregidos
+names(datos)
+
+# Revisar estructura después de la limpieza inicial
+glimpse(datos)
+
+# Revisar datos perdidos por variable
+colSums(is.na(datos))
+
+
+
+# 4. INSPECCIÓN INICIAL DE VARIABLES
+
+
+# Antes de corregir, revisamos las categorías principales.
+# Esto permite detectar errores de tipeo, diferencias en mayúsculas,
+# categorías duplicadas o valores extraños.
+
+datos %>% count(sexo, sort = TRUE)
+
+datos %>% count(diagnostico_principal, sort = TRUE)
+
+datos %>% count(tipo_tratamiento, sort = TRUE)
+
+datos %>% count(especie, sort = TRUE)
+
+# También revisamos variables numéricas.
+summary(select(
+  datos,
+  edad_anos,
+  peso_kg,
+  hemoglobina_g_d_l,
+  leucocitos_cel_u_l
+))
+
+
+
+# 5. LIMPIEZA DE VARIABLES CATEGÓRICAS
+
+
+# Guardamos algunas variables originales para comparar antes y después.
+# Esto es importante porque permite demostrar qué se corrigió.
+
+datos <- datos %>%
+  mutate(
+    sexo_original = sexo,
+    diagnostico_original = diagnostico_principal,
+    
+    # Corrección de la variable sexo
+    sexo = case_when(
+      sexo %in% c("Macho", "macho", "M", "MacHo") ~ "Macho",
+      sexo %in% c("Hembra", "hembra", "H") ~ "Hembra",
+      TRUE ~ sexo
+    ),
+    
+    # Corrección de diagnóstico principal
+    diagnostico_principal = case_when(
+      diagnostico_principal == "otitis" ~ "Otitis",
+      diagnostico_principal == "Dermatits" ~ "Dermatitis",
+      TRUE ~ diagnostico_principal
+    )
+  )
+
+# Comparar sexo antes y después
+table(datos$sexo_original, useNA = "ifany")
+table(datos$sexo, useNA = "ifany")
+
+# Comparar diagnóstico antes y después
+table(datos$diagnostico_original, useNA = "ifany")
+table(datos$diagnostico_principal, useNA = "ifany")
+
+
+
+# 6. LIMPIEZA DE VARIABLES NUMÉRICAS
+
+
+# Revisamos valores sospechosos antes de corregir.
+summary(select(
+  datos,
+  edad_anos,
+  peso_kg,
+  hemoglobina_g_d_l,
+  leucocitos_cel_u_l
+))
+
+# Criterio:
+# - No se inventan datos.
+# - Los valores imposibles o claramente inválidos se convierten en NA.
+# - Esto evita alterar artificialmente los resultados.
+
+datos <- datos %>%
+  mutate(
+    edad_anos = case_when(
+      edad_anos <= 0 | edad_anos > 25 ~ NA_real_,
+      TRUE ~ edad_anos
+    ),
+    
+    peso_kg = case_when(
+      peso_kg <= 0 ~ NA_real_,
+      TRUE ~ peso_kg
+    ),
+    
+    hemoglobina_g_d_l = case_when(
+      hemoglobina_g_d_l <= 0 ~ NA_real_,
+      TRUE ~ hemoglobina_g_d_l
+    ),
+    
+    leucocitos_cel_u_l = case_when(
+      leucocitos_cel_u_l <= 0 | leucocitos_cel_u_l > 50000 ~ NA_real_,
+      TRUE ~ leucocitos_cel_u_l
+    )
+  )
+
+# Revisar variables numéricas después de corregir
+summary(select(
+  datos,
+  edad_anos,
+  peso_kg,
+  hemoglobina_g_d_l,
+  leucocitos_cel_u_l
+))
+
+# Revisar datos perdidos después de la limpieza
+colSums(is.na(datos))
+
+
+
+# 7. CREACIÓN DE NUEVAS VARIABLES
+
+
+# Se crean variables agrupadas para facilitar el análisis descriptivo.
+# Por ejemplo:
+# - grupo_edad: cachorro/joven, adulto, senior
+# - categoria_peso: bajo, medio, alto
+
+datos <- datos %>%
+  mutate(
+    grupo_edad = case_when(
+      edad_anos < 1 ~ "Cachorro/Joven",
+      edad_anos >= 1 & edad_anos < 7 ~ "Adulto",
+      edad_anos >= 7 ~ "Senior",
+      TRUE ~ NA_character_
+    ),
+    
+    categoria_peso = case_when(
+      peso_kg < 5 ~ "Bajo peso",
+      peso_kg >= 5 & peso_kg < 15 ~ "Peso medio",
+      peso_kg >= 15 ~ "Peso alto",
+      TRUE ~ NA_character_
+    )
+  )
+
+
+
+# 8. CONVERSIÓN DE VARIABLES CATEGÓRICAS A FACTOR
+
+
+# Las variables categóricas se transforman a factor para análisis,
+# tablas y gráficos ordenados.
+
+datos <- datos %>%
+  mutate(
+    especie = factor(especie),
+    raza = factor(raza),
+    sexo = factor(sexo, levels = c("Hembra", "Macho")),
+    estado_reproductivo = factor(estado_reproductivo),
+    diagnostico_principal = factor(diagnostico_principal),
+    tipo_tratamiento = factor(tipo_tratamiento),
+    
+    grupo_edad = factor(
+      grupo_edad,
+      levels = c("Cachorro/Joven", "Adulto", "Senior")
+    ),
+    
+    categoria_peso = factor(
+      categoria_peso,
+      levels = c("Bajo peso", "Peso medio", "Peso alto")
+    )
+  )
+
+# Revisión final de estructura
+glimpse(datos)
+
+# Revisión de nuevas variables
+table(datos$grupo_edad, useNA = "ifany")
+table(datos$categoria_peso, useNA = "ifany")
+
+
+# 9. ESTADÍSTICA DESCRIPTIVA BÁSICA
+
+
+# Frecuencia absoluta y relativa de especie
+datos %>%
+  count(especie) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1))
+
+# Frecuencia absoluta y relativa de sexo
+datos %>%
+  count(sexo) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1))
+
+# Frecuencia absoluta y relativa de diagnóstico
+datos %>%
+  filter(!is.na(diagnostico_principal)) %>%
+  count(diagnostico_principal) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1))
+
+# Resumen de variables numéricas
+datos %>%
+  summarise(
+    n = n(),
+    edad_media = mean(edad_anos, na.rm = TRUE),
+    edad_de = sd(edad_anos, na.rm = TRUE),
+    edad_mediana = median(edad_anos, na.rm = TRUE),
+    peso_media = mean(peso_kg, na.rm = TRUE),
+    peso_de = sd(peso_kg, na.rm = TRUE),
+    peso_mediana = median(peso_kg, na.rm = TRUE),
+    peso_iqr = IQR(peso_kg, na.rm = TRUE),
+    hemoglobina_media = mean(hemoglobina_g_d_l, na.rm = TRUE),
+    leucocitos_mediana = median(leucocitos_cel_u_l, na.rm = TRUE)
+  )
+
+
+
+# 10. RESÚMENES POR GRUPOS
+
+# Edad y peso según especie
+resumen_especie <- datos %>%
+  group_by(especie) %>%
+  summarise(
+    n = n(),
+    edad_media = mean(edad_anos, na.rm = TRUE),
+    edad_de = sd(edad_anos, na.rm = TRUE),
+    peso_media = mean(peso_kg, na.rm = TRUE),
+    peso_de = sd(peso_kg, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+resumen_especie
+
+# Diagnóstico según especie
+diagnostico_especie <- datos %>%
+  filter(!is.na(diagnostico_principal)) %>%
+  group_by(especie, diagnostico_principal) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  arrange(especie, desc(n))
+
+diagnostico_especie
+
+
+
+# 11. GRÁFICOS
+
+
+
+# Gráfico 1: Distribución de pacientes según especie
+
+
+ggplot(datos, aes(x = especie)) +
+  geom_bar(fill = "steelblue") +
+  labs(
+    title = "Distribución de pacientes según especie",
+    x = "Especie",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 2: Distribución según sexo
+
+
+ggplot(filter(datos, !is.na(sexo)), aes(x = sexo)) +
+  geom_bar(fill = "purple") +
+  labs(
+    title = "Distribución de pacientes según sexo",
+    x = "Sexo",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 3: Diagnóstico principal
+
+
+ggplot(filter(datos, !is.na(diagnostico_principal)),
+       aes(x = diagnostico_principal)) +
+  geom_bar(fill = "darkgreen") +
+  labs(
+    title = "Diagnóstico principal en pacientes veterinarios",
+    x = "Diagnóstico",
+    y = "Frecuencia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+# Gráfico 4: Diagnóstico principal según especie
+
+
+ggplot(filter(datos, !is.na(diagnostico_principal)),
+       aes(x = diagnostico_principal, fill = especie)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Diagnóstico principal según especie",
+    x = "Diagnóstico",
+    y = "Frecuencia",
+    fill = "Especie"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+# Gráfico 5: Histograma de edad
+
+
+ggplot(filter(datos, !is.na(edad_anos)), aes(x = edad_anos)) +
+  geom_histogram(bins = 10, fill = "orange", color = "white") +
+  labs(
+    title = "Distribución de edad de los pacientes",
+    x = "Edad en años",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 6: Histograma de peso
+
+
+ggplot(filter(datos, !is.na(peso_kg)), aes(x = peso_kg)) +
+  geom_histogram(bins = 12, fill = "skyblue", color = "white") +
+  labs(
+    title = "Distribución del peso corporal",
+    x = "Peso kg",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 7: Boxplot de peso según especie
+
+
+ggplot(filter(datos, !is.na(peso_kg)),
+       aes(x = especie, y = peso_kg, fill = especie)) +
+  geom_boxplot() +
+  labs(
+    title = "Peso corporal según especie",
+    x = "Especie",
+    y = "Peso kg"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
+# Gráfico 8: Boxplot de edad según diagnóstico principal
+
+
+ggplot(filter(datos, !is.na(edad_anos), !is.na(diagnostico_principal)),
+       aes(x = diagnostico_principal, y = edad_anos)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(
+    title = "Edad según diagnóstico principal",
+    x = "Diagnóstico",
+    y = "Edad en años"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+# Gráfico 9: Tipo de tratamiento según especie
+
+
+ggplot(filter(datos, !is.na(tipo_tratamiento)),
+       aes(x = especie, fill = tipo_tratamiento)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Tipo de tratamiento según especie",
+    x = "Especie",
+    y = "Frecuencia",
+    fill = "Tratamiento"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 10: Grupo etario según especie
+
+
+ggplot(filter(datos, !is.na(grupo_edad)),
+       aes(x = grupo_edad, fill = especie)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Grupo etario según especie",
+    x = "Grupo etario",
+    y = "Frecuencia",
+    fill = "Especie"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 11: Relación entre edad y peso corporal
+
+
+ggplot(filter(datos, !is.na(edad_anos), !is.na(peso_kg)),
+       aes(x = edad_anos, y = peso_kg, color = especie)) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(
+    title = "Relación entre edad y peso corporal",
+    x = "Edad en años",
+    y = "Peso kg",
+    color = "Especie"
+  ) +
+  theme_minimal()
+
+
+
+# Gráfico 12: Hemoglobina según especie
+
+
+ggplot(filter(datos, !is.na(hemoglobina_g_d_l)),
+       aes(x = especie, y = hemoglobina_g_d_l, fill = especie)) +
+  geom_boxplot() +
+  labs(
+    title = "Hemoglobina según especie",
+    x = "Especie",
+    y = "Hemoglobina g/dL"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
+# Gráfico 13: Leucocitos según especie
+
+
+ggplot(filter(datos, !is.na(leucocitos_cel_u_l)),
+       aes(x = especie, y = leucocitos_cel_u_l, fill = especie)) +
+  geom_boxplot() +
+  labs(
+    title = "Leucocitos según especie",
+    x = "Especie",
+    y = "Leucocitos cel/uL"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
+# Gráfico 14: Categoría de peso según especie
+
+
+ggplot(filter(datos, !is.na(categoria_peso)),
+       aes(x = categoria_peso, fill = especie)) +
+  geom_bar(position = "dodge") +
+  labs(
+    title = "Categoría de peso según especie",
+    x = "Categoría de peso",
+    y = "Frecuencia",
+    fill = "Especie"
+  ) +
+  theme_minimal()
+
+
+
+# 12. TABLA RESUMEN TIPO TESIS
+
+
+# Esta tabla resume variables clínicas y demográficas.
+# Se agrupa por especie y añade una columna general.
+
+tabla_1 <- datos %>%
+  select(
+    especie,
+    sexo,
+    grupo_edad,
+    categoria_peso,
+    edad_anos,
+    peso_kg,
+    diagnostico_principal,
+    tipo_tratamiento,
+    hemoglobina_g_d_l,
+    leucocitos_cel_u_l
+  ) %>%
+  tbl_summary(
+    by = especie,
+    missing = "ifany",
+    label = list(
+      sexo ~ "Sexo",
+      grupo_edad ~ "Grupo etario",
+      categoria_peso ~ "Categoría de peso",
+      edad_anos ~ "Edad (años)",
+      peso_kg ~ "Peso (kg)",
+      diagnostico_principal ~ "Diagnóstico principal",
+      tipo_tratamiento ~ "Tipo de tratamiento",
+      hemoglobina_g_d_l ~ "Hemoglobina (g/dL)",
+      leucocitos_cel_u_l ~ "Leucocitos (cel/uL)"
+    )
+  ) %>%
+  add_overall() %>%
+  modify_spanning_header(all_stat_cols() ~ "**Especie**") %>%
+  bold_labels()
+
+tabla_1
+
+
+
+# 13. EXPORTAR TABLA A WORD
+
+
+tabla_1_word <- as_flex_table(tabla_1)
+
+save_as_docx(
+  tabla_1_word,
+  path = "tabla_1_practica_veterinaria.docx"
+)
+
+
+
+# 14. EXPORTAR UN GRÁFICO
+
+
+# Primero guardamos el gráfico en un objeto.
+grafico_diagnostico <- ggplot(
+  filter(datos, !is.na(diagnostico_principal)),
+  aes(x = diagnostico_principal)
+) +
+  geom_bar(fill = "darkgreen") +
+  labs(
+    title = "Diagnóstico principal en pacientes veterinarios",
+    x = "Diagnóstico",
+    y = "Frecuencia"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Luego lo exportamos como imagen.
+ggsave(
+  filename = "grafico_diagnostico.png",
+  plot = grafico_diagnostico,
+  width = 8,
+  height = 5,
+  dpi = 300
+)
+
+
+
+# 15. EXPORTAR BASE LIMPIA
+
+# Exportar la base limpia puede ser útil para usarla en otra sesión.
+write_csv(datos, "base_limpia_s05.csv")
+
